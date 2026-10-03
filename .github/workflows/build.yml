@@ -1,0 +1,52 @@
+name: build-client
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup XMake
+        uses: xmake-io/github-action-setup-xmake@v1
+
+      - name: Setup LLVM 22
+        uses: ZhongRuoyu/setup-llvm@v0
+        with:
+          llvm-version: 22
+
+      - name: Update XMake repos
+        shell: pwsh
+        run: xmake repo -u
+
+      - name: Configure client release
+        shell: pwsh
+        run: xmake f -a x64 -m release -p windows --target_type=client -y
+
+      - name: Build NovaMapClient
+        shell: pwsh
+        run: xmake build NovaMapClient -v -y
+
+      - name: Prepare ready-to-install ZIP
+        shell: pwsh
+        run: |
+          $src = "bin/NovaMapClient"
+          if (!(Test-Path "$src/NovaMapClient.dll")) { throw "NovaMapClient.dll was not produced" }
+          if (!(Test-Path "$src/manifest.json")) { throw "manifest.json was not produced" }
+          New-Item -ItemType Directory -Force -Path dist/NovaMapClient | Out-Null
+          Copy-Item "$src/NovaMapClient.dll" dist/NovaMapClient/
+          Copy-Item "$src/manifest.json" dist/NovaMapClient/
+          if (Test-Path "$src/NovaMapClient.pdb") { Copy-Item "$src/NovaMapClient.pdb" dist/NovaMapClient/ }
+          Compress-Archive -Path dist/NovaMapClient -DestinationPath dist/NovaMapClient-v0.2.0-ready.zip -Force
+
+      - name: Upload ready build
+        uses: actions/upload-artifact@v4
+        with:
+          name: NovaMapClient-v0.2.0-ready
+          path: dist/NovaMapClient-v0.2.0-ready.zip
+          if-no-files-found: error
