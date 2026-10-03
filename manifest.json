@@ -1,0 +1,8 @@
+{
+  "name": "${modName}",
+  "entry": "${modFile}",
+  "version": "${modVersion}",
+  "type": "native",
+  "platform": "${modPlatform}",
+  "description": "Minimapa em imagem para Minecraft Bedrock Windows"
+}
