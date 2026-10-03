@@ -30,7 +30,7 @@ jobs:
 
       - name: Build NovaMapClient
         shell: pwsh
-        run: xmake build NovaMapClient -v -y
+        run: xmake -v -y build NovaMapClient
 
       - name: Prepare ready-to-install ZIP
         shell: pwsh
